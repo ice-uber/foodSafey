@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.weike.foodsafe.dao.AddressDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.weike.foodsafe.entity.AddressEntity" id="addressMap">
+        <result property="addressid" column="addressId"/>
+        <result property="address" column="address"/>
+        <result property="purchaserid" column="purchaserId"/>
+        <result property="isdefault" column="isdefault"/>
+        <result property="remark" column="remark"/>
+        <result property="area" column="area"/>
+        <result property="name" column="name"/>
+        <result property="phone" column="phone"/>
+        <result property="addtime" column="addtime"/>
+        <result property="delflag" column="delflag"/>
+    </resultMap>
+
+
+</mapper>

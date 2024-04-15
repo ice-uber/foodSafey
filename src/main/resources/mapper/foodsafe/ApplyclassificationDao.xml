@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.weike.foodsafe.dao.ApplyclassificationDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.weike.foodsafe.entity.ApplyclassificationEntity" id="applyclassificationMap">
+        <result property="applyid" column="applyId"/>
+        <result property="distributionid" column="distributionId"/>
+        <result property="name" column="name"/>
+        <result property="parentid" column="parentId"/>
+        <result property="imgurl" column="imgUrl"/>
+        <result property="status" column="status"/>
+        <result property="addtime" column="addtime"/>
+        <result property="inputuser" column="inputuser"/>
+    </resultMap>
+
+
+</mapper>

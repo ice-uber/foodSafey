@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.weike.system.dao.DepartmentDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.weike.system.entity.DepartmentEntity" id="departmentMap">
+        <result property="deptId" column="dept_id"/>
+        <result property="deptName" column="dept_name"/>
+        <result property="deptParentId" column="dept_parent_id"/>
+        <result property="deptIsLeaf" column="dept_is_leaf"/>
+        <result property="deptOrder" column="dept_order"/>
+        <result property="deptOther" column="dept_other"/>
+    </resultMap>
+
+
+</mapper>

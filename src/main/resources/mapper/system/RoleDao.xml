@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.weike.system.dao.RoleDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.weike.system.entity.RoleEntity" id="roleMap">
+        <result property="roleId" column="role_id"/>
+        <result property="roleName" column="role_name"/>
+        <result property="roleType" column="role_type"/>
+        <result property="roleDept" column="role_dept"/>
+        <result property="roleOther" column="role_other"/>
+        <result property="roleLevel" column="role_level"/>
+        <result property="parentRoleId" column="parent_role_id"/>
+    </resultMap>
+
+
+</mapper>

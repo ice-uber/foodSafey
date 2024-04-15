@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.weike.foodsafe.dao.OrderDetailDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.weike.foodsafe.entity.OrderDetailEntity" id="orderDetailMap">
+        <result property="orderdetailid" column="orderDetailId"/>
+        <result property="goodsid" column="goodsId"/>
+        <result property="classificationid" column="classificationId"/>
+        <result property="classificationname" column="classificationName"/>
+        <result property="price" column="price"/>
+        <result property="imgurl" column="imgUrl"/>
+        <result property="goodsunit" column="goodsUnit"/>
+        <result property="amount" column="amount"/>
+        <result property="actualamount" column="actualAmount"/>
+        <result property="orderid" column="orderId"/>
+        <result property="supplierid" column="supplierId"/>
+        <result property="pzurl" column="pzUrl"/>
+        <result property="message" column="message"/>
+    </resultMap>
+
+
+</mapper>

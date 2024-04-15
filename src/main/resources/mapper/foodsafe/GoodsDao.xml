@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.weike.foodsafe.dao.GoodsDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.weike.foodsafe.entity.GoodsEntity" id="goodsMap">
+        <result property="goodsid" column="goodsId"/>
+        <result property="classificationid" column="classificationId"/>
+        <result property="goodsname" column="goodsName"/>
+        <result property="goodsno" column="goodsNo"/>
+        <result property="goodsimg" column="goodsImg"/>
+        <result property="imgurl" column="imgUrl"/>
+        <result property="goodsunit" column="goodsUnit"/>
+        <result property="distributionid" column="distributionId"/>
+        <result property="addtime" column="addtime"/>
+        <result property="status" column="status"/>
+        <result property="price" column="price"/>
+        <result property="minamount" column="minAmount"/>
+    </resultMap>
+
+
+</mapper>

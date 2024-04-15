@@ -1,0 +1,24 @@
+server:
+  port: 8090
+spring:
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+  profiles:
+    active: dev
+  application:
+    name: foodSafe
+  jackson:
+    date-format: yyyy/MM/dd hh:mm:ss
+
+#自定义key----------------------------------------------------------------------------------
+
+#jwt配置
+jwt:
+  token:
+    tokenExpiration: 120 #有效时间,单位分钟
+    tokenSignKey: foodsafe332  #当前程序签名秘钥 自定义 加盐
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

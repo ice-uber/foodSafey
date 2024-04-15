@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.weike.foodsafe.dao.OrderDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.weike.foodsafe.entity.OrderEntity" id="orderMap">
+        <result property="orderid" column="orderId"/>
+        <result property="orderno" column="orderNo"/>
+        <result property="addrid" column="addrId"/>
+        <result property="money" column="money"/>
+        <result property="actualmoney" column="actualMoney"/>
+        <result property="addtime" column="addtime"/>
+        <result property="timerange" column="timeRange"/>
+        <result property="distributiondate" column="distributionDate"/>
+        <result property="distributionid" column="distributionId"/>
+        <result property="status" column="status"/>
+        <result property="adduser" column="adduser"/>
+        <result property="purchaserid" column="purchaserId"/>
+        <result property="updatetime" column="updatetime"/>
+        <result property="finishuser" column="finishUser"/>
+        <result property="finishtime" column="finishTime"/>
+        <result property="signuser" column="signUser"/>
+        <result property="signtime" column="signTime"/>
+        <result property="confirmsignuser" column="confirmSignUser"/>
+        <result property="confirmsigntime" column="confirmSignTime"/>
+        <result property="address" column="address"/>
+        <result property="addrName" column="addr_name"/>
+        <result property="addrPhone" column="addr_phone"/>
+        <result property="addrArea" column="addr_area"/>
+    </resultMap>
+
+
+</mapper>

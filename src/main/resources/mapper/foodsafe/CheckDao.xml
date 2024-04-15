@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.weike.foodsafe.dao.CheckDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.weike.foodsafe.entity.CheckEntity" id="checkMap">
+        <result property="checkid" column="checkId"/>
+        <result property="orderdetailid" column="orderDetailId"/>
+        <result property="checkResult" column="check_result"/>
+        <result property="addtime" column="addtime"/>
+        <result property="checkType" column="check_type"/>
+        <result property="checkItem" column="check_item"/>
+        <result property="checkStandardval" column="check_standardVal"/>
+        <result property="checkTestval" column="check_testVal"/>
+        <result property="adduser" column="adduser"/>
+        <result property="type" column="type"/>
+        <result property="otherId" column="other_id"/>
+        <result property="classificationid" column="classificationId"/>
+    </resultMap>
+
+
+</mapper>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.weike.foodsafe.dao.VerifyforpwdDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.weike.foodsafe.entity.VerifyforpwdEntity" id="verifyforpwdMap">
+        <result property="verifyid" column="verifyId"/>
+        <result property="account" column="account"/>
+        <result property="companyname" column="companyName"/>
+        <result property="phone" column="phone"/>
+        <result property="addtime" column="addtime"/>
+        <result property="status" column="status"/>
+    </resultMap>
+
+
+</mapper>

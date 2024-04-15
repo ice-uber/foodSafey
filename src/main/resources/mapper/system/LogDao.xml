@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.weike.system.dao.LogDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.weike.system.entity.LogEntity" id="logMap">
+        <result property="logId" column="log_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="userName" column="user_name"/>
+        <result property="logTitle" column="log_title"/>
+        <result property="addtime" column="addtime"/>
+        <result property="logType" column="log_type"/>
+        <result property="reqUri" column="req_uri"/>
+        <result property="reqIp" column="req_ip"/>
+        <result property="exceptionCode" column="exception_code"/>
+        <result property="exceptionDetail" column="exception_detail"/>
+        <result property="params" column="params"/>
+        <result property="browser" column="browser"/>
+    </resultMap>
+
+
+</mapper>
