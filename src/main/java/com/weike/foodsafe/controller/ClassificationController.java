@@ -1,18 +1,14 @@
 package com.weike.foodsafe.controller;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Map;
 
+import com.weike.foodsafe.vo.goods.CategoryResVo;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.weike.foodsafe.entity.ClassificationEntity;
 import com.weike.foodsafe.service.ClassificationService;
-import com.weike.common.utils.PageUtils;
 import com.weike.common.utils.R;
 
 
@@ -33,13 +29,12 @@ public class ClassificationController {
     /**
      * 列表
      */
-    @RequestMapping("/list")
-    //@RequiresPermissions("foodsafe:classification:list")
-    public R list(@RequestParam Map<String, Object> params){
-        PageUtils page = classificationService.queryPage(params);
-
-        return R.ok().put("page", page);
+    @GetMapping("/tree")
+    public R list(){
+        ArrayList<CategoryResVo> categoryResVo = classificationService.getCategoryTree();
+        return R.ok().put("data", categoryResVo);
     }
+
 
 
     /**

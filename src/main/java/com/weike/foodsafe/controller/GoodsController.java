@@ -80,7 +80,6 @@ public class GoodsController {
      * 保存
      */
     @RequestMapping("/save")
-    //@RequiresPermissions("foodsafe:goods:save")
     public R save(@RequestBody GoodsEntity goods,
                   @RequestHeader String token){
 		goodsService.saveGoods(goods , token);

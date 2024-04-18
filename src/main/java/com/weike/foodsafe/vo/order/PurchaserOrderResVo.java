@@ -1,6 +1,7 @@
-package com.weike.foodsafe.vo;
+package com.weike.foodsafe.vo.order;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.weike.foodsafe.vo.OrderVo;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -8,14 +9,14 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * @ClassName: OrderVo
+ * @ClassName: PurchaserResVo
  * @Author: YuanDing
- * @Date: 2024/4/12 10:02
+ * @Date: 2024/4/16 9:57
  * @Description:
  */
 
 @Data
-public class OrderVo {
+public class PurchaserOrderResVo {
     private String orderid;
     /**
      *
@@ -50,6 +51,11 @@ public class OrderVo {
      * 配送商ID
      */
     private String distributionid;
+
+    /**
+     * 配送商ID
+     */
+    private String distributionName;
     /**
      *
      */
@@ -110,7 +116,7 @@ public class OrderVo {
      */
     private String addrArea;
 
-    private List<OrderDetailVo> children;
+    private List<PurchaserOrderResVo.OrderDetailVo> children;
 
     @Data
     static public class OrderDetailVo{
@@ -133,11 +139,8 @@ public class OrderVo {
          *
          */
         private BigDecimal price;
-        /**
-         * 商品图片
-         */
-        private String imgurl;
 
+        private String goodsimg;
         /**
          *
          */
@@ -167,5 +170,7 @@ public class OrderVo {
          */
         private String message;
 
+        private Integer number;
     }
+
 }

@@ -109,7 +109,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, UserEntity> implements
      * @return
      */
     @Override
-    public UserInfoVo userInfoByToken(String token) throws UserInfoFailException {
+    public UserInfoVo userInfoByToken(String token  , String distributionIdVo) throws UserInfoFailException {
         String userId = jwtHelper.getUserId(token);
         log.info("用户id: {}" , userId);
         UserEntity userEntity = this.getById(userId);
@@ -130,12 +130,23 @@ public class UserServiceImpl extends ServiceImpl<UserDao, UserEntity> implements
                 PurchaserEntity purchaserEntity = purchaserService.getOne(new LambdaQueryWrapper<PurchaserEntity>()
                         .eq(PurchaserEntity::getUserId, userId));
                 userInfoVo.setCompanyName(purchaserEntity.getCompanyname());
-                // 查找合作的配送商，如果没有设置为null
-                CooperationEntity cooperationEntity = cooperationService.getOne(new LambdaQueryWrapper<CooperationEntity>()
-                        .eq(CooperationEntity::getPurchaserid, purchaserEntity.getPurchaserid()));
-                userInfoVo.setDistributionId(cooperationEntity.getDistributionid());
-                DistributionEntity distribution = distributionService.getById(cooperationEntity.getDistributionid());
-                userInfoVo.setDistributionCompanyName(distribution.getCompanyname());
+
+                // 如果配送商id前端传递则要查指定的配送商数据
+                if (distributionIdVo != null) {
+                    DistributionEntity distribution = distributionService.getById(distributionIdVo);
+                    userInfoVo.setDistributionId(distributionIdVo);
+                    userInfoVo.setDistributionCompanyName(distribution.getCompanyname());
+                } else {
+                    // 查找合作的配送商，如果没有设置为null
+                    List<CooperationEntity> cooperationEntity = cooperationService.list(new LambdaQueryWrapper<CooperationEntity>()
+                            .eq(CooperationEntity::getPurchaserid, purchaserEntity.getPurchaserid()));
+                    DistributionEntity distribution = distributionService.getById(cooperationEntity.get(0).getDistributionid());
+                    userInfoVo.setDistributionId(cooperationEntity.get(0).getDistributionid());
+
+                    userInfoVo.setDistributionCompanyName(distribution.getCompanyname());
+                }
+
+
             }
             return userInfoVo;
         }

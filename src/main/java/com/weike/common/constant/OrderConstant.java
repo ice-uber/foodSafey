@@ -12,14 +12,16 @@ import lombok.Data;
 
 
 public enum OrderConstant {
-
+    
     UN_ACCEPT(0 , "未受理"),
     UN_SEND(1 , "待发货"),
     SEND(2 , "已发货"),
     RECEIVE(3 , "已签收"),
     FINISH(4 , "已完成"),
     REFUSE_ACCEPT(5 , "拒绝签收"),
-    NOT_ACCEPT(6 , "拒绝受理");
+    NOT_ACCEPT(6 , "拒绝受理"),
+    CANCEL(7 , "订单取消"),
+    DELETED(10 , "订单逻辑删除");
 
     private int code;
     private String message;

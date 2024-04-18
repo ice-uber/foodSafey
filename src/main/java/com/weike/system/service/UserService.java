@@ -23,7 +23,7 @@ public interface UserService extends IService<UserEntity> {
 
     String login(UserEntity userEntity) throws LoginFailException;
 
-    UserInfoVo userInfoByToken(String token) throws UserInfoFailException;
+    UserInfoVo userInfoByToken(String token , String distributionId) throws UserInfoFailException;
 
     PageUtils queryUserPage(Map<String, Object> params , String token);
 

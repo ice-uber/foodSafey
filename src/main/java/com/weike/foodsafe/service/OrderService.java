@@ -7,6 +7,7 @@ import com.weike.foodsafe.entity.OrderEntity;
 import com.weike.foodsafe.vo.GoodsSourceVo;
 import com.weike.foodsafe.vo.OrderGoodsVo;
 import com.weike.foodsafe.vo.order.OrderCheckOutVo;
+import com.weike.foodsafe.vo.order.OrderReceiveVo;
 
 import java.util.List;
 import java.util.Map;
@@ -34,9 +35,14 @@ public interface OrderService extends IService<OrderEntity> {
 
     void orderListOut(List<String> orderIds, String token) throws NoInputSourceException;
 
-    Map<String, Integer> orderCountByToken(String token);
+    Map<String, Long> orderCountByToken(String token);
 
     String checkOut(OrderCheckOutVo orderCheckOutVoList , String token);
 
+    PageUtils purchaserList(Map<String, Object> params, String token);
+
+    void orderReceive(OrderReceiveVo orderReceiveVo, String token);
+
+    void orderFinish(String orderid, String token);
 }
 

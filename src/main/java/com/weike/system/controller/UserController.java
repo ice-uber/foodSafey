@@ -48,8 +48,9 @@ public class UserController {
      * @throws UserInfoFailException
      */
     @GetMapping("/info")
-    public R userInfo(@RequestHeader String token) throws UserInfoFailException {
-        UserInfoVo userInfoVo = userService.userInfoByToken(token);
+    public R userInfo(@RequestHeader String token,
+                      @RequestParam(required = false) String distributionId) throws UserInfoFailException {
+        UserInfoVo userInfoVo = userService.userInfoByToken(token , distributionId);
         return R.ok().put("data" , userInfoVo);
     }
 

@@ -8,7 +8,9 @@ import com.weike.common.exception.NoInputSourceException;
 import com.weike.foodsafe.vo.GoodsSourceVo;
 import com.weike.foodsafe.vo.OrderGoodsVo;
 import com.weike.foodsafe.vo.order.OrderCheckOutVo;
+import com.weike.foodsafe.vo.order.OrderReceiveVo;
 import io.swagger.models.auth.In;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,10 +29,36 @@ import com.weike.common.utils.R;
  * @date 2024-04-09 17:00:47
  */
 @RestController
+@Slf4j
 @RequestMapping("foodsafe/order")
 public class OrderController {
     @Autowired
     private OrderService orderService;
+
+    /**
+     * 订单完成
+     * @param orderid
+     * @return
+     */
+    @PostMapping("/finish/{orderid}")
+    public R orderReceive(@PathVariable("orderid") String orderid ,
+                          @RequestHeader String token) {
+        orderService.orderFinish(orderid , token);
+        return R.ok();
+    }
+
+    /**
+     * 订单签收
+     * @param orderReceiveVo
+     * @return
+     */
+    @PostMapping("/receive")
+    public R orderReceive(@RequestBody OrderReceiveVo orderReceiveVo ,
+                      @RequestHeader String token) {
+        orderService.orderReceive(orderReceiveVo , token);
+        return R.ok();
+    }
+
 
     /**
      * 结账
@@ -52,7 +80,7 @@ public class OrderController {
      */
     @GetMapping("/count")
     public R ordercount(@RequestHeader String token) {
-        Map<String , Integer> goodsVoList = orderService.orderCountByToken(token);
+        Map<String , Long> goodsVoList = orderService.orderCountByToken(token);
         return R.ok().put("data" , goodsVoList);
     }
 
@@ -116,6 +144,16 @@ public class OrderController {
                          @RequestHeader String token){
         orderService.acceptOrder(orderid , status , token);
         return R.ok();
+    }
+
+    /**
+     * 获取当前采购商下的订单列表
+     */
+    @RequestMapping("/list/purchaser")
+    public R purchaserList(@RequestParam Map<String, Object> params,
+                  @RequestHeader String token){
+        PageUtils page = orderService.purchaserList(params , token);
+        return R.ok().put("data", page);
     }
 
     /**

@@ -72,14 +72,14 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsDao, GoodsEntity> impleme
     @Override
     public PageUtils queryGoodsPage(Map<String, Object> params, String token) {
         String key = (String) params.get("key");
-        String category = (String) params.get("category");
+        String categoryId = (String) params.get("categoryId");
         String status = (String) params.get("status");
         LambdaQueryWrapper<GoodsEntity> wrapper = new LambdaQueryWrapper<>();
         if (!StringUtils.isBlank(key)) {
             wrapper.like(GoodsEntity::getGoodsname, key);
         }
-        if (!StringUtils.isBlank(category)) {
-            wrapper.eq(GoodsEntity::getClassificationid, category);
+        if (!StringUtils.isBlank(categoryId)) {
+            wrapper.eq(GoodsEntity::getClassificationid, categoryId);
         }
         if (!StringUtils.isBlank(status)) {
             wrapper.eq(GoodsEntity::getStatus, status);
@@ -262,6 +262,7 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsDao, GoodsEntity> impleme
         }
 
         wrapper.eq(GoodsEntity :: getStatus , "1");
+        wrapper.eq(GoodsEntity :: getDistributionid , distributionId);
 
         IPage<GoodsEntity> page = this.page(
                 new Query<GoodsEntity>().getPage(params),

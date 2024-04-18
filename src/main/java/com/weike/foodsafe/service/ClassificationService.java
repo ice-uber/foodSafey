@@ -3,7 +3,9 @@ package com.weike.foodsafe.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.weike.common.utils.PageUtils;
 import com.weike.foodsafe.entity.ClassificationEntity;
+import com.weike.foodsafe.vo.goods.CategoryResVo;
 
+import java.util.ArrayList;
 import java.util.Map;
 
 /**
@@ -16,5 +18,7 @@ import java.util.Map;
 public interface ClassificationService extends IService<ClassificationEntity> {
 
     PageUtils queryPage(Map<String, Object> params);
+
+    ArrayList<CategoryResVo> getCategoryTree();
 }
 

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.weike.foodsafe.entity.DistributionEntity;
+import com.weike.foodsafe.vo.CooperationResVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,6 +28,20 @@ import com.weike.common.utils.R;
 public class CooperationController {
     @Autowired
     private CooperationService cooperationService;
+
+    /**
+     * 获取所有的采购商列表
+     * @param token
+     * @return
+     */
+    @RequestMapping("/list/puschaser")
+    //@RequiresPermissions("foodsafe:cooperation:list")
+    public R puschaserList(@RequestHeader String token,
+                           @RequestParam Map<String , Object> params){
+        PageUtils page = cooperationService.getpuschaserList(token , params);
+        return R.ok().put("data", page);
+    }
+
 
     /**
      * 获取所有的配送商列表

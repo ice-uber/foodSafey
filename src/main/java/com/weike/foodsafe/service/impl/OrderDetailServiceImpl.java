@@ -129,9 +129,15 @@ public class OrderDetailServiceImpl extends ServiceImpl<OrderDetailDao, OrderDet
                         .collect(Collectors.toList());
                 orderDetailVo.setPurchaserName(purchaserEntityList.get(0).getCompanyname());
 
+
                 // 设置总价
-                orderDetailVo.setTotalMoney(orderDetailEntity.getPrice()
-                        .multiply(orderDetailEntity.getActualamount()));
+                if (orderDetailEntity.getActualamount() != null) {
+                    orderDetailVo.setTotalMoney(orderDetailEntity.getPrice()
+                            .multiply(orderDetailEntity.getActualamount()));
+                } else {
+                    orderDetailVo.setTotalMoney(orderDetailEntity.getPrice()
+                            .multiply(orderDetailEntity.getAmount()));
+                }
 
                 // 设置签收时间
                 orderDetailVo.setSigntime(entityList.get(0).getSigntime());
@@ -167,7 +173,12 @@ public class OrderDetailServiceImpl extends ServiceImpl<OrderDetailDao, OrderDet
 
             BigDecimal total = new BigDecimal("0");
             for (OrderDetailEntity orderDetailEntity : orderDetailEntities) {
-                total = total.add(orderDetailEntity.getPrice().multiply(orderDetailEntity.getActualamount()));
+                if (orderDetailEntity.getActualamount() != null){
+                    total = total.add(orderDetailEntity.getPrice().multiply(orderDetailEntity.getActualamount()));
+                } else {
+                    total = total.add(orderDetailEntity.getPrice().multiply(orderDetailEntity.getAmount()));
+                }
+
             }
 
 

@@ -11,6 +11,8 @@ import com.weike.foodsafe.vo.GoodsSourceVo;
 import com.weike.foodsafe.vo.OrderGoodsVo;
 import com.weike.foodsafe.vo.OrderVo;
 import com.weike.foodsafe.vo.order.OrderCheckOutVo;
+import com.weike.foodsafe.vo.order.OrderReceiveVo;
+import com.weike.foodsafe.vo.order.PurchaserOrderResVo;
 import com.weike.system.entity.UserEntity;
 import com.weike.system.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -77,11 +80,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
 
     /**
      * 获取订单
+     *
      * @param params
      * @return
      */
     @Override
-    public PageUtils queryOrderPage(Map<String, Object> params , String token) {
+    public PageUtils queryOrderPage(Map<String, Object> params, String token) {
         // 取出 params 中的筛选条件
         String orderNo = (String) params.get("orderNo");
         String startDate = (String) params.get("startDate");
@@ -95,27 +99,26 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         String userId = jwtHelper.getUserId(token);
 
         if (!StringUtils.isBlank(orderNo)) {
-            wrapper.like(OrderEntity :: getOrderno , orderNo);
+            wrapper.like(OrderEntity::getOrderno, orderNo);
         }
         if (!StringUtils.isBlank(startDate)) {
-            wrapper.ge(OrderEntity :: getAddtime , startDate);
+            wrapper.ge(OrderEntity::getAddtime, startDate);
         }
         if (!StringUtils.isBlank(endDate)) {
-            wrapper.le(OrderEntity :: getAddtime , endDate);
+            wrapper.le(OrderEntity::getAddtime, endDate);
         }
         if (!StringUtils.isBlank(purchaserName)) {
             PurchaserEntity purchaserEntity = purchaserService.getOne(new LambdaQueryWrapper<PurchaserEntity>()
                     .eq(PurchaserEntity::getCompanyname, purchaserName));
             if (purchaserEntity != null) {
-                wrapper.le(OrderEntity :: getPurchaserid , purchaserEntity.getPurchaserid());
-            } else wrapper.le(OrderEntity :: getPurchaserid , -1);
-
+                wrapper.le(OrderEntity::getPurchaserid, purchaserEntity.getPurchaserid());
+            } else wrapper.le(OrderEntity::getPurchaserid, -1);
         }
 
         if (!StringUtils.isBlank(status)) {
             // 当status为-1时代表查询全部
-            if (!status.equals("-1") ) {
-                wrapper.eq(OrderEntity :: getStatus , status);
+            if (!status.equals("-1")) {
+                wrapper.eq(OrderEntity::getStatus, status);
             }
         }
 
@@ -123,7 +126,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         DistributionEntity distributionEntity = distributionService.getOne(new LambdaQueryWrapper<DistributionEntity>()
                 .eq(DistributionEntity::getUserId, userId));
 
-        wrapper.eq(OrderEntity :: getDistributionid , distributionEntity.getDistributionid());
+        wrapper.eq(OrderEntity::getDistributionid, distributionEntity.getDistributionid());
 
         // 返回的结果
         IPage<OrderEntity> page = this.page(
@@ -200,10 +203,11 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
 
     /**
      * 受理/拒绝订单
+     *
      * @param orderid
      */
     @Override
-    public void acceptOrder(String orderid,String status  , String token) {
+    public void acceptOrder(String orderid, String status, String token) {
         String userId = jwtHelper.getUserId(token);
 
         if (!StringUtils.isBlank(userId)) {
@@ -225,6 +229,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
 
     /**
      * 订单出库
+     *
      * @param orderid
      * @param token
      */
@@ -233,7 +238,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
 
         OrderEntity orderEntity = this.getById(orderid);
 
-        if (orderEntity!= null) {
+        if (orderEntity != null) {
             // 获取全部订单详情实体类
             List<OrderDetailEntity> orderDetailEntities = orderDetailService.list(
                     new LambdaQueryWrapper<OrderDetailEntity>()
@@ -243,7 +248,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
             ArrayList<String> noInputNameList = new ArrayList<>();
             // 检查订单详情中是否已填报来源
             boolean isInput = true;
-            for(OrderDetailEntity orderDetailEntity : orderDetailEntities ) {
+            for (OrderDetailEntity orderDetailEntity : orderDetailEntities) {
                 System.out.println(orderDetailEntity.getSupplierid());
                 if (StringUtils.isBlank(orderDetailEntity.getSupplierid())) {
                     isInput = false;
@@ -253,7 +258,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
             }
             // 如果发现为填写来源则抛出未填写来源异常
             if (!isInput) {
-                throw new NoInputSourceException("订单出库异常" , noInputNameList);
+                throw new NoInputSourceException("订单出库异常", noInputNameList);
             } else {
                 // 更新订单状态为已发货
                 OrderEntity order = new OrderEntity();
@@ -268,6 +273,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
 
     /**
      * 填写订单商品来源
+     *
      * @param goodsSourceVo
      */
     @Override
@@ -307,6 +313,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
 
     /**
      * 获取订单order下的全商品vo
+     *
      * @param orderid
      * @return
      */
@@ -342,7 +349,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
     }
 
     /**
-     *
      * @param orderIds
      * @param token
      */
@@ -355,7 +361,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         ArrayList<String> noInputNameList = new ArrayList<>();
         // 检查订单详情中是否已填报来源
         boolean isInput = true;
-        for(OrderDetailEntity orderDetailEntity : orderDetailEntities ) {
+        for (OrderDetailEntity orderDetailEntity : orderDetailEntities) {
             if (StringUtils.isBlank(orderDetailEntity.getSupplierid())) {
                 isInput = false;
                 GoodsEntity goods = goodsService.getById(orderDetailEntity.getGoodsid());
@@ -364,7 +370,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         }
         // 如果发现为填写来源则抛出未填写来源异常
         if (!isInput) {
-            throw new NoInputSourceException("订单出库异常" , noInputNameList);
+            throw new NoInputSourceException("订单出库异常", noInputNameList);
         } else {
             // 更新订单状态为已发货
             List<OrderEntity> orderEntities = orderIds.stream().map(orderId -> {
@@ -380,42 +386,99 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
 
     /**
      * 获取账号下的各类订单状态
+     *
      * @param token
      * @return
      */
     @Override
-    public Map<String, Integer> orderCountByToken(String token) {
-        String distributionId = distributionService.getDistributionIdByToken(token);
+    public Map<String, Long> orderCountByToken(String token) {
+        String userId = jwtHelper.getUserId(token);
 
-        List<OrderEntity> orderEntities = this.list(new LambdaQueryWrapper<OrderEntity>()
-                .eq(OrderEntity::getDistributionid, distributionId));
+        PurchaserEntity purchaserEntity = purchaserService.getOne(new LambdaQueryWrapper<PurchaserEntity>()
+                .eq(PurchaserEntity::getUserId, userId));
 
-        int unAccept = 0;
-        int unSend = 0;
-        int send = 0;
-        int receive = 0;
-        int finish = 0;
-        for (OrderEntity orderEntity : orderEntities) {
-            switch (orderEntity.getStatus()){
-                case "0": unAccept += 1; break;
-                case "1": unSend += 1; break;
-                case "2": send += 1; break;
-                case "3": receive += 1; break;
-                case "4": finish += 1; break;
-            }
+        DistributionEntity distributionEntity = distributionService.getOne(new LambdaQueryWrapper<DistributionEntity>()
+                .eq(DistributionEntity::getUserId, userId));
+
+        long unAccept = 0;
+        long unSend = 0;
+        long send = 0;
+        long receive = 0;
+        long finish = 0;
+        long refuseReceive = 0;
+        long refuseAccept = 0;
+        long cancel = 0;
+
+
+        if (purchaserEntity != null) {
+
+            unAccept = this.count(new LambdaQueryWrapper<OrderEntity>()
+                    .eq(OrderEntity::getPurchaserid, purchaserEntity.getPurchaserid())
+                    .eq(OrderEntity::getStatus, "0"));
+            unSend = this.count(new LambdaQueryWrapper<OrderEntity>()
+                    .eq(OrderEntity::getPurchaserid, purchaserEntity.getPurchaserid()).eq(OrderEntity::getStatus, "1"));
+            send = this.count(new LambdaQueryWrapper<OrderEntity>()
+                    .eq(OrderEntity::getPurchaserid, purchaserEntity.getPurchaserid()).eq(OrderEntity::getStatus, "2"));
+            receive = this.count(new LambdaQueryWrapper<OrderEntity>()
+                    .eq(OrderEntity::getPurchaserid, purchaserEntity.getPurchaserid()).eq(OrderEntity::getStatus, "3"));
+            finish = this.count(new LambdaQueryWrapper<OrderEntity>()
+                    .eq(OrderEntity::getPurchaserid, purchaserEntity.getPurchaserid()).eq(OrderEntity::getStatus, "4"));
+            refuseReceive = this.count(new LambdaQueryWrapper<OrderEntity>()
+                    .eq(OrderEntity::getPurchaserid, purchaserEntity.getPurchaserid()).eq(OrderEntity::getStatus, "5"));
+            refuseAccept = this.count(new LambdaQueryWrapper<OrderEntity>()
+                    .eq(OrderEntity::getPurchaserid, purchaserEntity.getPurchaserid()).eq(OrderEntity::getStatus, "6"));
+            cancel = this.count(new LambdaQueryWrapper<OrderEntity>()
+                    .eq(OrderEntity::getPurchaserid, purchaserEntity.getPurchaserid()).eq(OrderEntity::getStatus, "7"));
         }
-        HashMap<String, Integer> result = new HashMap<>();
-        result.put("unAccept" , unAccept);
-        result.put("unSend" , unSend);
-        result.put("send" , send);
-        result.put("receive" , receive);
-        result.put("finish" , finish);
+
+        if (distributionEntity != null) {
+            unAccept = this.count(new LambdaQueryWrapper<OrderEntity>()
+                    .eq(OrderEntity::getDistributionid, distributionEntity.getDistributionid())
+                    .eq(OrderEntity::getStatus, "0"));
+            unSend = this.count(new LambdaQueryWrapper<OrderEntity>()
+                    .eq(OrderEntity::getDistributionid, distributionEntity.getDistributionid()).eq(OrderEntity::getStatus, "1"));
+            send = this.count(new LambdaQueryWrapper<OrderEntity>()
+                    .eq(OrderEntity::getDistributionid, distributionEntity.getDistributionid()).eq(OrderEntity::getStatus, "2"));
+            receive = this.count(new LambdaQueryWrapper<OrderEntity>()
+                    .eq(OrderEntity::getDistributionid, distributionEntity.getDistributionid()).eq(OrderEntity::getStatus, "3"));
+            finish = this.count(new LambdaQueryWrapper<OrderEntity>()
+                    .eq(OrderEntity::getDistributionid, distributionEntity.getDistributionid()).eq(OrderEntity::getStatus, "4"));
+            refuseReceive = this.count(new LambdaQueryWrapper<OrderEntity>()
+                    .eq(OrderEntity::getDistributionid, distributionEntity.getDistributionid()).eq(OrderEntity::getStatus, "5"));
+            refuseAccept = this.count(new LambdaQueryWrapper<OrderEntity>()
+                    .eq(OrderEntity::getDistributionid, distributionEntity.getDistributionid()).eq(OrderEntity::getStatus, "6"));
+            cancel = this.count(new LambdaQueryWrapper<OrderEntity>()
+                    .eq(OrderEntity::getDistributionid, distributionEntity.getDistributionid()).eq(OrderEntity::getStatus, "7"));
+
+        }
+
+
+        long total = 0;
+        HashMap<String, Long> result = new HashMap<>();
+        result.put("unAccept", unAccept);
+        result.put("unSend", unSend);
+        result.put("send", send);
+        result.put("receive", receive);
+        result.put("finish", finish);
+        result.put("refuseReceive", refuseReceive);
+        result.put("refuseAccept", refuseAccept);
+        result.put("cancel", cancel);
+
+
+        for (Map.Entry<String, Long> item : result.entrySet()) {
+            total += item.getValue().intValue();
+        }
+
+        result.put("total", total);
 
         return result;
+
     }
+
 
     /**
      * 结账
+     *
      * @param orderCheckOutVoList
      * @param token
      */
@@ -434,11 +497,11 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
 
             if (goodsList.size() > 0) {
                 OrderEntity orderEntity = new OrderEntity();
-                orderEntity.setOrderno(UUID.randomUUID().toString().replace("-" , ""));
+                orderEntity.setOrderno(UUID.randomUUID().toString().replace("-", ""));
 
                 // 计算总价
                 BigDecimal totalMoney = new BigDecimal("0");
-                for(OrderCheckOutVo.Goods goods : goodsList) {
+                for (OrderCheckOutVo.Goods goods : goodsList) {
                     // 找出对应的实体类
                     List<GoodsEntity> goodsEntityList = goodsEntities.stream()
                             .filter(goodsEntity -> goodsEntity.getGoodsid().equals(goods.getGoodsid()))
@@ -455,6 +518,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
                         totalMoney = totalMoney.add(number.multiply(price));
                     }
                 }
+                orderEntity.setDistributiondate(orderCheckOutVoList.getDistributiondate());
                 orderEntity.setMoney(totalMoney);
 
                 // 获取地址 设置地址信息
@@ -464,6 +528,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
                 orderEntity.setAddrName(addressEntity.getName());
                 orderEntity.setAddrPhone(addressEntity.getPhone());
                 orderEntity.setAddrArea(addressEntity.getArea());
+
 
                 String userId = jwtHelper.getUserId(token);
 
@@ -509,13 +574,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
                     } else {
                         // 清空购物车
                         shoppingcarDao.delete(new LambdaQueryWrapper<ShoppingcarEntity>()
-                                .eq(ShoppingcarEntity :: getDistributionId , distributionId)
-                                .eq(ShoppingcarEntity :: getPurchaserid , purchaserId));
+                                .eq(ShoppingcarEntity::getDistributionId, distributionId)
+                                .eq(ShoppingcarEntity::getPurchaserid, purchaserId));
                         return orderEntity.getOrderno();
                     }
-
-
-
                 } else {
                     throw new RuntimeException("订单保存失败");
                 }
@@ -524,6 +586,153 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         }
 
         return null;
+    }
+
+    /**
+     * 当前配送商的订单列表
+     *
+     * @param params
+     * @param token
+     * @return
+     */
+    @Override
+    public PageUtils purchaserList(Map<String, Object> params, String token) {
+        String status = (String) params.get("status");
+        String purchaserId = purchaserService.getPurchaserIdByToken(token);
+        LambdaQueryWrapper<OrderEntity> wrapper = new LambdaQueryWrapper<>();
+        if (!StringUtils.isBlank(status)) {
+            wrapper.eq(OrderEntity::getStatus, status);
+        }
+        wrapper.eq(OrderEntity::getPurchaserid, purchaserId);
+        // 查询当前用户的订单
+        IPage<OrderEntity> page = this.page(
+                new Query<OrderEntity>().getPage(params),
+                wrapper
+        );
+
+        PageUtils pageUtils = new PageUtils(page);
+
+        // 获取全部订单id
+        List<OrderEntity> records = page.getRecords();
+        List<String> orderIds = records.stream().map(OrderEntity::getOrderid).collect(Collectors.toList());
+
+        // 获取所有配送商id
+        List<String> distributionIds = records.stream().map(OrderEntity::getDistributionid).collect(Collectors.toList());
+
+        List<OrderDetailEntity> orderDetailEntities = null;
+        if (orderIds.size() > 0) {
+            // 获取所有订单详情
+            orderDetailEntities = orderDetailService.list(new LambdaQueryWrapper<OrderDetailEntity>()
+                    .in(OrderDetailEntity::getOrderid, orderIds));
+        }
+        List<GoodsEntity> goodsEntities = null;
+        // 获取所有商品详情
+        if (orderDetailEntities != null && orderDetailEntities.size() > 0) {
+            List<String> goodsIds = orderDetailEntities.stream().map(OrderDetailEntity::getGoodsid).collect(Collectors.toList());
+            goodsEntities = goodsService.listByIds(goodsIds);
+        }
+
+        // 获取所有配送商实体
+        List<DistributionEntity> distributionEntities = null;
+        if (distributionIds.size() > 0) {
+            distributionEntities = distributionService.listByIds(distributionIds);
+        }
+
+        List<DistributionEntity> distributionEntityList = distributionEntities;
+        List<OrderDetailEntity> orderDetailEntityList = orderDetailEntities;
+        List<GoodsEntity> goodsEntityList = goodsEntities;
+        // 构造vo返回前端
+        List<PurchaserOrderResVo> purchaserOrderResVos = records.stream().map(orderEntity -> {
+            PurchaserOrderResVo purchaserOrderResVo = new PurchaserOrderResVo();
+            BeanUtils.copyProperties(orderEntity, purchaserOrderResVo);
+
+            // 获取配送商公司名
+            if (distributionEntityList != null) {
+                List<DistributionEntity> distribution = distributionEntityList.stream().filter(distributionEntity
+                                -> distributionEntity.getDistributionid().equals(orderEntity.getDistributionid()))
+                        .collect(Collectors.toList());
+                if (distribution.size() > 0)
+                    purchaserOrderResVo.setDistributionName(distribution.get(0).getCompanyname());
+            }
+
+            // 获取当前订单的商品详情
+            List<OrderDetailEntity> detailEntities = orderDetailEntityList.stream().filter(orderDetailEntity
+                            -> orderDetailEntity.getOrderid().equals(orderEntity.getOrderid()))
+                    .collect(Collectors.toList());
+
+            // 构造商品详情
+            List<PurchaserOrderResVo.OrderDetailVo> orderDetailVos = null;
+            if (detailEntities.size() > 0) {
+                orderDetailVos = detailEntities.stream().map(orderDetailEntity -> {
+                    PurchaserOrderResVo.OrderDetailVo orderDetailVo = new PurchaserOrderResVo.OrderDetailVo();
+                    BeanUtils.copyProperties(orderDetailEntity, orderDetailVo);
+                    orderDetailVo.setNumber(orderDetailEntity.getAmount().intValue());
+                    // 设置商品属性
+                    if (goodsEntityList != null) {
+                        List<GoodsEntity> entityList = goodsEntityList.stream().filter(goodsEntity
+                                        -> goodsEntity.getGoodsid().equals(orderDetailEntity.getGoodsid()))
+                                .collect(Collectors.toList());
+                        if (entityList.size() > 0) {
+                            BeanUtils.copyProperties(entityList.get(0), orderDetailVo);
+                            orderDetailVo.setGoodsName(entityList.get(0).getGoodsname());
+                        }
+                    }
+
+                    return orderDetailVo;
+                }).collect(Collectors.toList());
+            }
+            purchaserOrderResVo.setChildren(orderDetailVos);
+
+
+            return purchaserOrderResVo;
+        }).collect(Collectors.toList());
+
+        pageUtils.setList(purchaserOrderResVos);
+        return pageUtils;
+    }
+
+    /**
+     * 订单签收
+     * @param orderReceiveVo
+     * @param token
+     */
+    @Transactional
+    @Override
+    public void orderReceive(OrderReceiveVo orderReceiveVo, String token) {
+        String userId = jwtHelper.getUserId(token);
+
+        OrderEntity orderEntity = new OrderEntity();
+        orderEntity.setOrderid(orderReceiveVo.getOrderid());
+        orderEntity.setSignuser(userId);
+        orderEntity.setConfirmsigntime(new Date());
+        orderEntity.setStatus(OrderConstant.RECEIVE.getCode() + "");
+        this.updateById(orderEntity);
+        List<OrderReceiveVo.OrderDetail> children = orderReceiveVo.getChildren();
+        List<OrderDetailEntity> orderDetailEntities = children.stream().map(orderDetail -> {
+            OrderDetailEntity orderDetailEntity = new OrderDetailEntity();
+            orderDetailEntity.setAmount(orderDetail.getActualamount());
+            orderDetailEntity.setOrderdetailid(orderDetail.getOrderdetailid());
+            return orderDetailEntity;
+
+        }).collect(Collectors.toList());
+        orderDetailService.updateBatchById(orderDetailEntities);
+
+    }
+
+    /**
+     * 订单完成
+     * @param orderid
+     * @param token
+     */
+    @Override
+    public void orderFinish(String orderid, String token) {
+        String userId = jwtHelper.getUserId(token);
+        OrderEntity orderEntity = new OrderEntity();
+        orderEntity.setStatus(OrderConstant.FINISH.getCode() + "");
+        orderEntity.setFinishtime(new Date());
+        orderEntity.setOrderid(orderid);
+        orderEntity.setFinishuser(userId);
+        this.updateById(orderEntity);
     }
 
 }
