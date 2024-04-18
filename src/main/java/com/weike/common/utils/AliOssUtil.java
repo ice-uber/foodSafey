@@ -25,7 +25,6 @@ public class AliOssUtil {
     private String bucketName;
 
     public AliOssUtil() {
-        log.info(this.accessKeyId , this.accessKeySecret , this.endpoint , this.bucketName);
     }
 
     /**

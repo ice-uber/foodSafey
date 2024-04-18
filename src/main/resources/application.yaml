@@ -17,7 +17,7 @@ spring:
 #jwt配置
 jwt:
   token:
-    tokenExpiration: 120 #有效时间,单位分钟
+    tokenExpiration: 99999 #有效时间,单位分钟
     tokenSignKey: foodsafe332  #当前程序签名秘钥 自定义 加盐
 mybatis-plus:
   configuration:

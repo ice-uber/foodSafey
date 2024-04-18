@@ -13,5 +13,6 @@ import org.apache.ibatis.annotations.Mapper;
  */
 @Mapper
 public interface DistributionDao extends BaseMapper<DistributionEntity> {
-	
+
+    String getDistributionIdByUserId(String userId);
 }

@@ -6,6 +6,7 @@ import com.weike.common.exception.LoginFailException;
 import com.weike.common.exception.UserInfoFailException;
 import com.weike.common.utils.JwtHelper;
 import com.weike.common.utils.MD5Util;
+import com.weike.foodsafe.dao.DistributionDao;
 import com.weike.foodsafe.entity.AttachmentsEntity;
 import com.weike.foodsafe.entity.CooperationEntity;
 import com.weike.foodsafe.entity.DistributionEntity;
@@ -46,7 +47,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, UserEntity> implements
     private JwtHelper jwtHelper;
 
     @Autowired
-    private DistributionService distributionService;
+    private DistributionDao distributionDao;
 
     @Autowired
     private AttachmentsService attachmentsService;
@@ -114,8 +115,8 @@ public class UserServiceImpl extends ServiceImpl<UserDao, UserEntity> implements
         log.info("用户id: {}" , userId);
         UserEntity userEntity = this.getById(userId);
         if (userEntity != null) {
-            String distributionId = distributionService.getDistributionIdByToken(token);
-            DistributionEntity distributionEntity = distributionService.getById(distributionId);
+            String distributionId = distributionDao.getDistributionIdByUserId(userId);
+            DistributionEntity distributionEntity = distributionDao.selectById(distributionId);
             UserInfoVo userInfoVo = new UserInfoVo();
             userInfoVo.setUserName(userEntity.getUserName());
             userInfoVo.setAvatar(userEntity.getAvatar());
@@ -133,14 +134,14 @@ public class UserServiceImpl extends ServiceImpl<UserDao, UserEntity> implements
 
                 // 如果配送商id前端传递则要查指定的配送商数据
                 if (distributionIdVo != null) {
-                    DistributionEntity distribution = distributionService.getById(distributionIdVo);
+                    DistributionEntity distribution = distributionDao.selectById(distributionIdVo);
                     userInfoVo.setDistributionId(distributionIdVo);
                     userInfoVo.setDistributionCompanyName(distribution.getCompanyname());
                 } else {
                     // 查找合作的配送商，如果没有设置为null
                     List<CooperationEntity> cooperationEntity = cooperationService.list(new LambdaQueryWrapper<CooperationEntity>()
                             .eq(CooperationEntity::getPurchaserid, purchaserEntity.getPurchaserid()));
-                    DistributionEntity distribution = distributionService.getById(cooperationEntity.get(0).getDistributionid());
+                    DistributionEntity distribution = distributionDao.selectById(cooperationEntity.get(0).getDistributionid());
                     userInfoVo.setDistributionId(cooperationEntity.get(0).getDistributionid());
 
                     userInfoVo.setDistributionCompanyName(distribution.getCompanyname());
@@ -189,7 +190,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, UserEntity> implements
         UserEntity userEntity = this.getById(userId);
         BeanUtils.copyProperties(userEntity , userInfoDetailVo);
 
-        DistributionEntity distributionEntity = distributionService.getOne(new LambdaQueryWrapper<DistributionEntity>()
+        DistributionEntity distributionEntity = distributionDao.selectOne(new LambdaQueryWrapper<DistributionEntity>()
                 .eq(DistributionEntity::getUserId, userId));
         BeanUtils.copyProperties(distributionEntity, userInfoDetailVo);
 

@@ -26,5 +26,6 @@ public interface DistributionService extends IService<DistributionEntity> {
 
     void saveDistrbution(DistributionVo distributionVo);
 
+    PageUtils distributionList(Map<String, Object> params, String token);
 }
 

@@ -28,6 +28,6 @@ public class MvcConfig implements WebMvcConfigurer {
         registry.addInterceptor(actionRecordInterceptor);
 
         // 登录保护拦截器注册
-        registry.addInterceptor(loginProtectInterceptor );
+        registry.addInterceptor(loginProtectInterceptor).excludePathPatterns("/system/user/login");
     }
 }

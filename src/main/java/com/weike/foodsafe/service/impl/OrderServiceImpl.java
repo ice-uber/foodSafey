@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.weike.common.constant.OrderConstant;
 import com.weike.common.exception.NoInputSourceException;
 import com.weike.common.utils.JwtHelper;
+import com.weike.foodsafe.dao.DistributionDao;
 import com.weike.foodsafe.dao.ShoppingcarDao;
 import com.weike.foodsafe.entity.*;
 import com.weike.foodsafe.service.*;
@@ -52,7 +53,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
     private JwtHelper jwtHelper;
 
     @Autowired
-    private DistributionService distributionService;
+    private DistributionDao distributionDao;
 
     @Autowired
     private PurchaserService purchaserService;
@@ -123,10 +124,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         }
 
         // 查询当前账号属于哪个配送商
-        DistributionEntity distributionEntity = distributionService.getOne(new LambdaQueryWrapper<DistributionEntity>()
+        String distributionId = distributionDao.getDistributionIdByUserId(userId);
+/*        DistributionEntity distributionEntity = distributionService.getOne(new LambdaQueryWrapper<DistributionEntity>()
                 .eq(DistributionEntity::getUserId, userId));
 
-        wrapper.eq(OrderEntity::getDistributionid, distributionEntity.getDistributionid());
+        wrapper.eq(OrderEntity::getDistributionid, distributionEntity.getDistributionid());*/
+        wrapper.eq(OrderEntity::getDistributionid, distributionId);
 
         // 返回的结果
         IPage<OrderEntity> page = this.page(
@@ -397,9 +400,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         PurchaserEntity purchaserEntity = purchaserService.getOne(new LambdaQueryWrapper<PurchaserEntity>()
                 .eq(PurchaserEntity::getUserId, userId));
 
-        DistributionEntity distributionEntity = distributionService.getOne(new LambdaQueryWrapper<DistributionEntity>()
-                .eq(DistributionEntity::getUserId, userId));
-
+//        DistributionEntity distributionEntity = distributionService.getOne(new LambdaQueryWrapper<DistributionEntity>()
+//                .eq(DistributionEntity::getUserId, userId));
+        String distributionId = distributionDao.getDistributionIdByUserId(userId);
         long unAccept = 0;
         long unSend = 0;
         long send = 0;
@@ -431,24 +434,24 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
                     .eq(OrderEntity::getPurchaserid, purchaserEntity.getPurchaserid()).eq(OrderEntity::getStatus, "7"));
         }
 
-        if (distributionEntity != null) {
+        if (distributionId != null) {
             unAccept = this.count(new LambdaQueryWrapper<OrderEntity>()
-                    .eq(OrderEntity::getDistributionid, distributionEntity.getDistributionid())
+                    .eq(OrderEntity::getDistributionid, distributionId)
                     .eq(OrderEntity::getStatus, "0"));
             unSend = this.count(new LambdaQueryWrapper<OrderEntity>()
-                    .eq(OrderEntity::getDistributionid, distributionEntity.getDistributionid()).eq(OrderEntity::getStatus, "1"));
+                    .eq(OrderEntity::getDistributionid, distributionId).eq(OrderEntity::getStatus, "1"));
             send = this.count(new LambdaQueryWrapper<OrderEntity>()
-                    .eq(OrderEntity::getDistributionid, distributionEntity.getDistributionid()).eq(OrderEntity::getStatus, "2"));
+                    .eq(OrderEntity::getDistributionid, distributionId).eq(OrderEntity::getStatus, "2"));
             receive = this.count(new LambdaQueryWrapper<OrderEntity>()
-                    .eq(OrderEntity::getDistributionid, distributionEntity.getDistributionid()).eq(OrderEntity::getStatus, "3"));
+                    .eq(OrderEntity::getDistributionid, distributionId).eq(OrderEntity::getStatus, "3"));
             finish = this.count(new LambdaQueryWrapper<OrderEntity>()
-                    .eq(OrderEntity::getDistributionid, distributionEntity.getDistributionid()).eq(OrderEntity::getStatus, "4"));
+                    .eq(OrderEntity::getDistributionid, distributionId).eq(OrderEntity::getStatus, "4"));
             refuseReceive = this.count(new LambdaQueryWrapper<OrderEntity>()
-                    .eq(OrderEntity::getDistributionid, distributionEntity.getDistributionid()).eq(OrderEntity::getStatus, "5"));
+                    .eq(OrderEntity::getDistributionid, distributionId).eq(OrderEntity::getStatus, "5"));
             refuseAccept = this.count(new LambdaQueryWrapper<OrderEntity>()
-                    .eq(OrderEntity::getDistributionid, distributionEntity.getDistributionid()).eq(OrderEntity::getStatus, "6"));
+                    .eq(OrderEntity::getDistributionid, distributionId).eq(OrderEntity::getStatus, "6"));
             cancel = this.count(new LambdaQueryWrapper<OrderEntity>()
-                    .eq(OrderEntity::getDistributionid, distributionEntity.getDistributionid()).eq(OrderEntity::getStatus, "7"));
+                    .eq(OrderEntity::getDistributionid, distributionId).eq(OrderEntity::getStatus, "7"));
 
         }
 
@@ -635,7 +638,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         // 获取所有配送商实体
         List<DistributionEntity> distributionEntities = null;
         if (distributionIds.size() > 0) {
-            distributionEntities = distributionService.listByIds(distributionIds);
+            distributionEntities = distributionDao.selectBatchIds(distributionIds);
         }
 
         List<DistributionEntity> distributionEntityList = distributionEntities;

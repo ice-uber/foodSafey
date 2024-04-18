@@ -15,6 +15,9 @@
         <result property="addr" column="addr"/>
         <result property="checkEnable" column="check_enable"/>
     </resultMap>
+    <select id="getDistributionIdByUserId" resultType="java.lang.String">
+        select distributionid from ybsx_distribution where user_id = '${userid}'
+    </select>
 
 
 </mapper>

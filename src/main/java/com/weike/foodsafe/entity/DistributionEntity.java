@@ -57,4 +57,7 @@ public class DistributionEntity implements Serializable {
 	 */
 	private String checkEnable;
 
+	private String hasAuthentication;
+	private String shopImg;
+
 }

@@ -1,20 +1,20 @@
 package com.weike.foodsafe.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.weike.common.constant.OrderConstant;
 import com.weike.common.utils.JwtHelper;
-import com.weike.foodsafe.entity.AttachmentsEntity;
-import com.weike.foodsafe.entity.CooperationEntity;
-import com.weike.foodsafe.entity.PurchaserEntity;
-import com.weike.foodsafe.service.AttachmentsService;
-import com.weike.foodsafe.service.CooperationService;
-import com.weike.foodsafe.service.PurchaserService;
+import com.weike.foodsafe.entity.*;
+import com.weike.foodsafe.service.*;
 import com.weike.foodsafe.vo.DistributionVo;
 import com.weike.foodsafe.vo.PurchaserVo;
+import com.weike.foodsafe.vo.distrobution.DistributionResVo;
+import com.weike.foodsafe.vo.goods.GoodsCountVo;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,8 +28,6 @@ import com.weike.common.utils.PageUtils;
 import com.weike.common.utils.Query;
 
 import com.weike.foodsafe.dao.DistributionDao;
-import com.weike.foodsafe.entity.DistributionEntity;
-import com.weike.foodsafe.service.DistributionService;
 
 
 @Service("distributionService")
@@ -46,6 +44,12 @@ public class DistributionServiceImpl extends ServiceImpl<DistributionDao, Distri
 
     @Autowired
     private AttachmentsService attachmentsService;
+
+    @Autowired
+    private GoodsService goodsService;
+
+    @Autowired
+    private OrderService orderService;
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -160,6 +164,107 @@ public class DistributionServiceImpl extends ServiceImpl<DistributionDao, Distri
 
 
 
+    }
+
+
+    /**
+     * 获取配送商下的配送商列表
+     * @param params
+     * @param token
+     * @return
+     */
+    @Override
+    public PageUtils distributionList(Map<String, Object> params, String token) {
+        String key = (String) params.get("key");
+        String status = (String) params.get("status");
+        String purchaserIdByToken = purchaserService.getPurchaserIdByToken(token);
+
+        LambdaQueryWrapper<DistributionEntity> wrapper = new LambdaQueryWrapper<>();
+        if (!StringUtils.isBlank(key)) {
+            wrapper.like(DistributionEntity :: getCompanyname , key);
+        }
+
+        LambdaQueryWrapper<CooperationEntity> cooperationEntityLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        if (!StringUtils.isBlank(status)) {
+            cooperationEntityLambdaQueryWrapper.like(CooperationEntity :: getStatus , status);
+        }
+
+        IPage<CooperationEntity> page = cooperationService.page(
+                new Query<CooperationEntity>().getPage(params),
+                cooperationEntityLambdaQueryWrapper
+                        .eq(CooperationEntity::getPurchaserid, purchaserIdByToken)
+        );
+
+        PageUtils pageUtils = new PageUtils(page);
+
+        List<CooperationEntity> records = page.getRecords();
+
+
+        List<DistributionResVo> distributionResVos = null;
+        if (records.size() > 0) {
+            // 收集所有配送商的id
+            List<String> distributionIds = records.stream().map(CooperationEntity::getDistributionid).collect(Collectors.toList());
+
+            // 获取所有的配送商
+            List<DistributionEntity> distributionEntities = this.list(wrapper.in(DistributionEntity::getDistributionid, distributionIds));
+
+            // 获取筛选完的配送商id
+            List<String> filterDistributionIds = distributionEntities.stream().map(DistributionEntity::getDistributionid).collect(Collectors.toList());
+
+            // 获取全部配送商附件
+            List<AttachmentsEntity> attachmentsEntityList = attachmentsService.list(new LambdaQueryWrapper<AttachmentsEntity>()
+                    .in(AttachmentsEntity::getRelationid, filterDistributionIds));
+
+            // 构造返回结果
+            distributionResVos = distributionEntities.stream().map(distributionEntity -> {
+                DistributionResVo distributionResVo = new DistributionResVo();
+                BeanUtils.copyProperties(distributionEntity, distributionResVo);
+
+                // 设置商家图片列表
+                List<AttachmentsEntity> attachmentsEntities = attachmentsEntityList.stream().filter(attachmentsEntity
+                                -> attachmentsEntity.getRelationid().equals(distributionEntity.getDistributionid()))
+                        .collect(Collectors.toList());
+
+                List<String> imgList = attachmentsEntities.stream().map(AttachmentsEntity::getUrl).collect(Collectors.toList());
+                distributionResVo.setImgList(imgList);
+
+                // 设置商品种类
+                List<GoodsCountVo> goodsCountVos = goodsService.goodsCountByDistributionId(distributionEntity.getDistributionid());
+                List<GoodsCountVo> collect = goodsCountVos.stream().sorted((item1, item2) -> item2.getCount() - item1.getCount()).collect(Collectors.toList());
+                distributionResVo.setGoodsCount(collect);
+
+                // 设置商品合作明细
+                List<CooperationEntity> cooperationEntities = records.stream().filter(cooperationEntity
+                                -> cooperationEntity.getDistributionid().equals(distributionEntity.getDistributionid()))
+                        .collect(Collectors.toList());
+                if (cooperationEntities.size() > 0) {
+                    distributionResVo.setCooperation(cooperationEntities.get(0));
+                }
+
+                // 设置店铺图片
+                distributionResVo.setShopImg(distributionEntity.getShopImg());
+
+                // 设置来往记录
+                List<OrderEntity> orderEntityList = orderService.list(new LambdaQueryWrapper<OrderEntity>()
+                        .eq(OrderEntity::getDistributionid, distributionEntity.getDistributionid())
+                        .eq(OrderEntity::getPurchaserid, purchaserIdByToken)
+                        .eq(OrderEntity::getStatus, "4"));
+
+                distributionResVo.setSumFinishOrder(orderEntityList.size());
+                // 计算总金额
+                BigDecimal totalMoney = new BigDecimal("0");
+                for (OrderEntity orderEntity : orderEntityList) {
+                    BigDecimal money = orderEntity.getMoney();
+                    totalMoney = totalMoney.add(money);
+                }
+
+                distributionResVo.setSumMoney(totalMoney);
+
+                return distributionResVo;
+            }).collect(Collectors.toList());
+        }
+        pageUtils.setList(distributionResVos);
+        return pageUtils;
     }
 
 }

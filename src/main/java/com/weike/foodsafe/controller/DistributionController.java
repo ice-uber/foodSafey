@@ -43,11 +43,11 @@ public class DistributionController {
      * 列表
      */
     @RequestMapping("/list")
-    //@RequiresPermissions("foodsafe:distribution:list")
-    public R list(@RequestParam Map<String, Object> params){
-        PageUtils page = distributionService.queryPage(params);
+    public R list(@RequestParam Map<String, Object> params,
+                  @RequestHeader String token){
+        PageUtils page = distributionService.distributionList(params , token);
 
-        return R.ok().put("page", page);
+        return R.ok().put("data", page);
     }
 
 

@@ -2,6 +2,7 @@ package com.weike.foodsafe.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.weike.common.utils.JwtHelper;
+import com.weike.foodsafe.dao.DistributionDao;
 import com.weike.foodsafe.dao.PurchaserDao;
 import com.weike.foodsafe.dao.ShoppingcarDao;
 import com.weike.foodsafe.entity.*;
@@ -45,7 +46,7 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsDao, GoodsEntity> impleme
     private ClassificationService classificationService;
 
     @Autowired
-    private DistributionService distributionService;
+    private DistributionDao distributionDao;
 
     @Autowired
     private ShoppingcarDao shoppingcarDao;
@@ -88,7 +89,7 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsDao, GoodsEntity> impleme
         String userId = jwtHelper.getUserId(token);
 
         // 查询当前账号属于哪个配送商
-        DistributionEntity distributionEntity = distributionService.getOne(new LambdaQueryWrapper<DistributionEntity>()
+        DistributionEntity distributionEntity = distributionDao.selectOne(new LambdaQueryWrapper<DistributionEntity>()
                 .eq(DistributionEntity::getUserId, userId));
 
         wrapper.eq(GoodsEntity::getDistributionid, distributionEntity.getDistributionid());
@@ -182,7 +183,11 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsDao, GoodsEntity> impleme
 
     @Override
     public void saveGoods(GoodsEntity goods, String token) {
-        String distributionIdByToken = distributionService.getDistributionIdByToken(token);
+        String userId = jwtHelper.getUserId(token);
+        DistributionEntity distributionEntity = distributionDao.selectOne(new LambdaQueryWrapper<DistributionEntity>()
+                .eq(DistributionEntity::getUserId, userId));
+        String distributionIdByToken =  distributionEntity.getDistributionid();
+
         goods.setDistributionid(distributionIdByToken);
         goods.setStatus("0");
         this.save(goods);

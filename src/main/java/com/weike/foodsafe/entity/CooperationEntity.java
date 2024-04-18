@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 
 import java.io.Serializable;
 import java.util.Date;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 /**
@@ -43,10 +45,12 @@ public class CooperationEntity implements Serializable {
 	/**
 	 * 
 	 */
+	@JsonFormat(pattern = "yyyy年MM月dd日")
 	private Date begindate;
 	/**
 	 * 
 	 */
+	@JsonFormat(pattern = "yyyy年MM月dd日")
 	private Date enddate;
 	/**
 	 * 

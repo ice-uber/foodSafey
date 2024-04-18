@@ -2,10 +2,10 @@ package com.weike.foodsafe.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.weike.common.constant.OrderConstant;
+import com.weike.common.utils.JwtHelper;
+import com.weike.foodsafe.dao.DistributionDao;
 import com.weike.foodsafe.dao.OrderDao;
-import com.weike.foodsafe.entity.GoodsEntity;
-import com.weike.foodsafe.entity.OrderEntity;
-import com.weike.foodsafe.entity.PurchaserEntity;
+import com.weike.foodsafe.entity.*;
 import com.weike.foodsafe.service.*;
 import com.weike.foodsafe.vo.OrderDetailVo;
 import com.weike.foodsafe.vo.OrderVo;
@@ -27,14 +27,13 @@ import com.weike.common.utils.PageUtils;
 import com.weike.common.utils.Query;
 
 import com.weike.foodsafe.dao.OrderDetailDao;
-import com.weike.foodsafe.entity.OrderDetailEntity;
 
 
 @Service("orderDetailService")
 public class OrderDetailServiceImpl extends ServiceImpl<OrderDetailDao, OrderDetailEntity> implements OrderDetailService {
 
     @Autowired
-    private DistributionService distributionService;
+    private DistributionDao distributionDao;
     @Autowired
     private OrderDao orderDao;
 
@@ -43,6 +42,9 @@ public class OrderDetailServiceImpl extends ServiceImpl<OrderDetailDao, OrderDet
 
     @Autowired
     private PurchaserService purchaserService;
+
+    @Autowired
+    private JwtHelper jwtHelper;
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -61,8 +63,8 @@ public class OrderDetailServiceImpl extends ServiceImpl<OrderDetailDao, OrderDet
      */
     @Override
     public PageUtils queryOrderDetailPage(Map<String, Object> params , String token) {
-        String distributionId = distributionService.getDistributionIdByToken(token);
-
+        String userId = jwtHelper.getUserId(token);
+        String distributionId = distributionDao.getDistributionIdByUserId(userId);
         String purchaserid = (String) params.get("purchaserid");
         String endDate = (String) params.get("endDate");
         String startDate = (String) params.get("startDate");
@@ -157,7 +159,8 @@ public class OrderDetailServiceImpl extends ServiceImpl<OrderDetailDao, OrderDet
      */
     @Override
     public Map<String, Object> total(String token) {
-        String distributionId = distributionService.getDistributionIdByToken(token);
+        String userId = jwtHelper.getUserId(token);
+        String distributionId = distributionDao.getDistributionIdByUserId(userId);
 
         // 获取账号下的所有订单
         List<OrderEntity> orderEntities = orderDao.selectList(new LambdaQueryWrapper<OrderEntity>()
