@@ -1,6 +1,7 @@
 package com.weike.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.weike.common.constant.UserConstant;
 import com.weike.common.exception.BizCodeEnum;
 import com.weike.common.exception.LoginFailException;
 import com.weike.common.exception.UserInfoFailException;
@@ -116,16 +117,17 @@ public class UserServiceImpl extends ServiceImpl<UserDao, UserEntity> implements
         UserEntity userEntity = this.getById(userId);
         if (userEntity != null) {
             String distributionId = distributionDao.getDistributionIdByUserId(userId);
-            DistributionEntity distributionEntity = distributionDao.selectById(distributionId);
             UserInfoVo userInfoVo = new UserInfoVo();
             userInfoVo.setUserName(userEntity.getUserName());
             userInfoVo.setAvatar(userEntity.getAvatar());
             userInfoVo.setRole(userEntity.getUserType());
-            // 如果配送商不为空则代表该账号是配送商
-            if (distributionEntity != null ){
-                userInfoVo.setCompanyName(distributionEntity.getCompanyname());
-            } else {
 
+            // 如果是配送商
+            if (UserConstant.DISTRIBUTION.getCode().equals(userEntity.getUserType())){
+                DistributionEntity distributionEntity = distributionDao.selectById(distributionId);
+                userInfoVo.setCompanyName(distributionEntity.getCompanyname());
+            } else if (UserConstant.PURCHASER.getCode().equals(userEntity.getUserType())){
+                // 如果是采购商
 
                 // 设置采购商公司名
                 PurchaserEntity purchaserEntity = purchaserService.getOne(new LambdaQueryWrapper<PurchaserEntity>()
@@ -146,7 +148,8 @@ public class UserServiceImpl extends ServiceImpl<UserDao, UserEntity> implements
 
                     userInfoVo.setDistributionCompanyName(distribution.getCompanyname());
                 }
-
+            } else if (UserConstant.SUPERVISOR.getCode().equals(userEntity.getUserType())){
+                // 如果是监管者
 
             }
             return userInfoVo;

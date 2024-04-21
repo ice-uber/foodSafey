@@ -13,8 +13,10 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -129,5 +131,64 @@ public class CooperationServiceImpl extends ServiceImpl<CooperationDao, Cooperat
 
         return pageUtils;
     }
+
+    /**
+     * 获取还未合作的配送商列表
+     * @param token
+     * @return
+     */
+    @Override
+    public List<PurchaserEntity> unCooperationPurchaserList(String token) {
+        String userId = jwtHelper.getUserId(token);
+        String distributionIdByUserId = distributionDao.getDistributionIdByUserId(userId);
+
+        List<CooperationEntity> cooperationEntities = this.list(new LambdaQueryWrapper<CooperationEntity>()
+                .eq(CooperationEntity :: getDistributionid , distributionIdByUserId));
+
+        // 收集所有的采购商id
+        List<String> purchaserIds = cooperationEntities.stream().map(CooperationEntity::getPurchaserid).collect(Collectors.toList());
+        List<PurchaserEntity> purchaserEntityList;
+        if (purchaserIds.size() > 0) {
+            purchaserEntityList = purchaserService.list(new LambdaQueryWrapper<PurchaserEntity>()
+                    .notIn(PurchaserEntity::getPurchaserid, purchaserIds));
+        }else {
+            purchaserEntityList = new ArrayList<>();
+        }
+
+
+        return purchaserEntityList;
+
+    }
+
+    /**
+     * 申请合作
+     * @param token
+     * @param id
+     */
+    @Override
+    public void applyCooperation(String token, String id) {
+        String userId = jwtHelper.getUserId(token);
+        String distributionIdByUserId = distributionDao.getDistributionIdByUserId(userId);
+
+        CooperationEntity cooperationEntity = new CooperationEntity();
+        cooperationEntity.setCooperationid(UUID.randomUUID().toString());
+
+
+        if (distributionIdByUserId != null) {
+            cooperationEntity.setDistributionid(distributionIdByUserId);
+            cooperationEntity.setPurchaserid(id);
+            cooperationEntity.setStatus("2");
+        } else {
+            String purchaserIdByToken = purchaserService.getPurchaserIdByToken(token);
+            cooperationEntity.setDistributionid(id);
+            cooperationEntity.setPurchaserid(purchaserIdByToken);
+            cooperationEntity.setStatus("3");
+        }
+
+        this.save(cooperationEntity);
+
+    }
+
+
 
 }

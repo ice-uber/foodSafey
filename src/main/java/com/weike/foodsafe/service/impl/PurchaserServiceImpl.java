@@ -44,7 +44,6 @@ public class PurchaserServiceImpl extends ServiceImpl<PurchaserDao, PurchaserEnt
     public String getPurchaserIdByToken(String token) {
         String userId = jwtHelper.getUserId(token);
 
-
         PurchaserEntity purchaserEntity = this.getOne(new LambdaQueryWrapper<PurchaserEntity>()
                 .eq(PurchaserEntity::getUserId, userId));
 

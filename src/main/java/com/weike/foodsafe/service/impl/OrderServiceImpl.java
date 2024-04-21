@@ -6,6 +6,7 @@ import com.weike.common.exception.NoInputSourceException;
 import com.weike.common.utils.JwtHelper;
 import com.weike.foodsafe.dao.DistributionDao;
 import com.weike.foodsafe.dao.ShoppingcarDao;
+import com.weike.foodsafe.dao.SupplierDao;
 import com.weike.foodsafe.entity.*;
 import com.weike.foodsafe.service.*;
 import com.weike.foodsafe.vo.GoodsSourceVo;
@@ -69,6 +70,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
     @Autowired
     private ShoppingcarDao shoppingcarDao;
 
+    @Autowired
+    private AttachmentsService attachmentsService;
+
+    @Autowired
+    private SupplierDao supplierDao;
+
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
         IPage<OrderEntity> page = this.page(
@@ -125,10 +132,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
 
         // 查询当前账号属于哪个配送商
         String distributionId = distributionDao.getDistributionIdByUserId(userId);
-/*        DistributionEntity distributionEntity = distributionService.getOne(new LambdaQueryWrapper<DistributionEntity>()
-                .eq(DistributionEntity::getUserId, userId));
-
-        wrapper.eq(OrderEntity::getDistributionid, distributionEntity.getDistributionid());*/
         wrapper.eq(OrderEntity::getDistributionid, distributionId);
 
         // 返回的结果
@@ -141,67 +144,166 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         List<OrderVo> orderVoList = null;
 
         if (pageRecords.size() > 0) {
-            // 收集订单id
-            List<String> orderIds = pageRecords.stream().map(OrderEntity::getOrderid).collect(Collectors.toList());
-
-            // 收集采购商id
-            List<String> purchaserIds = pageRecords.stream().map(OrderEntity::getPurchaserid).collect(Collectors.toList());
-
-            // 查出所需的全部采购商实体
-            List<PurchaserEntity> purchaserEntityList = purchaserService.listByIds(purchaserIds);
-
-            // 查出当前所有的订单详情
-            List<OrderDetailEntity> orderDetailEntityList = orderDetailService.list(new LambdaQueryWrapper<OrderDetailEntity>()
-                    .in(OrderDetailEntity::getOrderid, orderIds));
-
-            // 查出所需的所有商品详情id
-            List<String> goodsIds = orderDetailEntityList.stream().map(OrderDetailEntity::getGoodsid).collect(Collectors.toList());
-
-            // 查出所有的商品信息
-            List<GoodsEntity> goodsEntityList = goodsService.listByIds(goodsIds);
-
-
-            // 构造Vo
-            orderVoList = pageRecords.stream().map(orderEntity -> {
-                OrderVo orderVo = new OrderVo();
-                BeanUtils.copyProperties(orderEntity, orderVo);
-
-                // 查询当前订单的采购商实体
-                List<PurchaserEntity> purchaserEntities = purchaserEntityList.stream().filter(purchaserEntity
-                                -> purchaserEntity.getPurchaserid().equals(orderEntity.getPurchaserid()))
-                        .collect(Collectors.toList());
-                orderVo.setPurchaserName(purchaserEntities.get(0).getCompanyname());
-
-                // 查询当前订单的订单详情
-                List<OrderDetailEntity> orderDetailEntities = orderDetailEntityList.stream().filter(orderDetailEntity
-                                -> orderDetailEntity.getOrderid().equals(orderEntity.getOrderid()))
-                        .collect(Collectors.toList());
-
-                // 构造订单详情
-                List<OrderVo.OrderDetailVo> orderDetailVos = orderDetailEntities.stream().map(orderDetailEntity -> {
-                    OrderVo.OrderDetailVo orderDetailVo = new OrderVo.OrderDetailVo();
-                    BeanUtils.copyProperties(orderDetailEntity, orderDetailVo);
-                    // 设置不同字段
-
-                    // 过滤出需要的商品实体类
-                    List<GoodsEntity> goodsEntities = goodsEntityList.stream()
-                            .filter(goodsEntity -> goodsEntity.getGoodsid().equals(orderDetailEntity.getGoodsid()))
-                            .collect(Collectors.toList());
-
-                    orderDetailVo.setGoodsName(goodsEntities.get(0).getGoodsname());
-                    return orderDetailVo;
-                }).collect(Collectors.toList());
-
-                orderVo.setChildren(orderDetailVos);
-                return orderVo;
-            }).collect(Collectors.toList());
+           orderVoList = getOrderList(pageRecords);
         }
-
 
         // 设置返回结果
         PageUtils pageUtils = new PageUtils(page);
         pageUtils.setList(orderVoList);
         return pageUtils;
+    }
+
+    /**
+     * 获取订单分页数据
+     * @param orderEntityList
+     * @return
+     */
+    @Override
+    public List<OrderVo> getOrderList(List<OrderEntity> orderEntityList ) {
+        // 收集订单id
+        List<String> orderIds = orderEntityList.stream().map(OrderEntity::getOrderid).collect(Collectors.toList());
+
+        // 收集采购商id
+        List<String> purchaserIds = orderEntityList.stream().map(OrderEntity::getPurchaserid).collect(Collectors.toList());
+
+        // 收集配送商id
+        List<String> distributionIds = orderEntityList.stream().map(OrderEntity::getDistributionid).collect(Collectors.toList());
+
+        // 查出所需的全部配送商实体
+        List<DistributionEntity> distributionEntityList;
+        if(distributionIds.size() > 0) {
+            distributionEntityList = distributionDao.selectBatchIds(distributionIds);
+        } else {
+            distributionEntityList = new ArrayList<>();
+        }
+
+
+        // 查出所需的全部采购商实体
+        List<PurchaserEntity> purchaserEntityList;
+        if (purchaserIds.size() > 0) {
+            purchaserEntityList = purchaserService.listByIds(purchaserIds);
+        } else {
+            purchaserEntityList = new ArrayList<>();
+        }
+
+
+        // 查出当前所有的订单详情
+        List<OrderDetailEntity> orderDetailEntityList;
+        if (orderIds.size() > 0) {
+            orderDetailEntityList = orderDetailService.list(new LambdaQueryWrapper<OrderDetailEntity>()
+                    .in(OrderDetailEntity::getOrderid, orderIds));
+        } else {
+            orderDetailEntityList = new ArrayList<>();
+        }
+
+
+        // 收集所有供应商id
+        List<String> supplierIds = orderDetailEntityList.stream().map(OrderDetailEntity::getSupplierid).collect(Collectors.toList());
+
+        // 查出所有供应商实体类
+        List<SupplierEntity> supplierEntities;
+        if (supplierIds.size() > 0) {
+            supplierEntities = supplierDao.selectBatchIds(supplierIds);
+        } else {
+            supplierEntities = new ArrayList<>();
+        }
+
+        // 查出所需的所有商品详情id
+        List<String> goodsIds = orderDetailEntityList.stream().map(OrderDetailEntity::getGoodsid).collect(Collectors.toList());
+
+        // 查出所有的商品信息
+        List<GoodsEntity> goodsEntityList;
+        if (goodsIds.size() > 0) {
+            goodsEntityList = goodsService.listByIds(goodsIds);
+        } else {
+            goodsEntityList = new ArrayList<>();
+        }
+
+
+        // 查出所有配送商及采购商证件信息
+        List<AttachmentsEntity> attachmentsEntities;
+        if (distributionIds.size() > 0) {
+            attachmentsEntities = attachmentsService.list(new LambdaQueryWrapper<AttachmentsEntity>()
+                    .in(AttachmentsEntity::getRelationid, distributionIds)
+                    .or()
+                    .in(AttachmentsEntity::getRelationid, purchaserIds));
+        } else {
+            attachmentsEntities = new ArrayList<>();
+        }
+
+
+        // 构造Vo
+        List<OrderVo> orderVoList = orderEntityList.stream().map(orderEntity -> {
+            OrderVo orderVo = new OrderVo();
+            BeanUtils.copyProperties(orderEntity, orderVo);
+
+            // 查询当前订单的采购商实体
+            List<PurchaserEntity> purchaserEntities = purchaserEntityList.stream().filter(purchaserEntity
+                            -> purchaserEntity.getPurchaserid().equals(orderEntity.getPurchaserid()))
+                    .collect(Collectors.toList());
+            orderVo.setPurchaserName(purchaserEntities.get(0).getCompanyname());
+
+            // 查出所有订单相关证件照片
+                // 查询采购商证件信息
+            List<String> puchaserImgList = attachmentsEntities.stream().filter(attachmentsEntity
+                            -> attachmentsEntity.getRelationid().equals(orderEntity.getPurchaserid()))
+                    .map(AttachmentsEntity::getUrl)
+                    .collect(Collectors.toList());
+                // 设置采购商相关证件列表
+            orderVo.setPurchaserPzUrl(puchaserImgList);
+                // 查询配送商证件信息
+            List<String> distributionImgList = attachmentsEntities.stream().filter(attachmentsEntity
+                            -> attachmentsEntity.getRelationid().equals(orderEntity.getDistributionid()))
+                    .map(AttachmentsEntity :: getUrl)
+                    .collect(Collectors.toList());
+                // 设置配送商证件列表
+            orderVo.setDistributionPzUrl(distributionImgList);
+
+            // 查询当前订单的配送商实体类
+            List<DistributionEntity> distributionEntities = distributionEntityList.stream().filter(distributionEntity
+                            -> distributionEntity.getDistributionid().equals(orderEntity.getDistributionid()))
+                    .collect(Collectors.toList());
+
+            // 如果配送商存在
+            if (distributionEntities.size() > 0) {
+                DistributionEntity distributionEntity = distributionEntities.get(0);
+                orderVo.setDistributionCompanyName(distributionEntity.getCompanyname());
+                orderVo.setDistributionAddr(distributionEntity.getAddr());
+                orderVo.setDistributionPerson(distributionEntity.getName());
+                orderVo.setDistributionTel(distributionEntity.getPhone());
+            }
+
+            // 查询当前订单的订单详情
+            List<OrderDetailEntity> orderDetailEntities = orderDetailEntityList.stream().filter(orderDetailEntity
+                            -> orderDetailEntity.getOrderid().equals(orderEntity.getOrderid()))
+                    .collect(Collectors.toList());
+
+            // 构造订单详情
+            List<OrderVo.OrderDetailVo> orderDetailVos = orderDetailEntities.stream().map(orderDetailEntity -> {
+                OrderVo.OrderDetailVo orderDetailVo = new OrderVo.OrderDetailVo();
+                BeanUtils.copyProperties(orderDetailEntity, orderDetailVo);
+                // 找出所需供应商实体类
+                List<SupplierEntity> supplier = supplierEntities.stream().filter(supplierEntity
+                                -> supplierEntity.getSupplierid().equals(orderDetailEntity.getSupplierid()))
+                        .collect(Collectors.toList());
+
+                // 过滤出需要的商品实体类
+                List<GoodsEntity> goodsEntities = goodsEntityList.stream()
+                        .filter(goodsEntity -> goodsEntity.getGoodsid().equals(orderDetailEntity.getGoodsid()))
+                        .collect(Collectors.toList());
+
+                if (supplier.size() > 0) {
+                    orderDetailVo.setSupplierEntity(supplier.get(0));
+                }
+
+                orderDetailVo.setGoodsName(goodsEntities.get(0).getGoodsname());
+                return orderDetailVo;
+            }).collect(Collectors.toList());
+
+            orderVo.setChildren(orderDetailVos);
+            return orderVo;
+        }).collect(Collectors.toList());
+        return orderVoList;
     }
 
     /**
@@ -303,12 +405,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
             orderDetail.setOrderdetailid(orderDetailEntity.getOrderdetailid());
             orderDetail.setSupplierid(goodsSourceVo.getSupplierId());
             orderDetail.setPzurl(goodsSourceVo.getPzurl());
-
             orderDetail.setPurchaseTime(goodsSourceVo.getPurchaseTime());
             return orderDetail;
         }).collect(Collectors.toList());
 
-        System.out.println(orderDetailEntityList);
         // 批量更新
         orderDetailService.updateBatchById(orderDetailEntityList);
     }
@@ -352,6 +452,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
     }
 
     /**
+     * 批量订单出库
      * @param orderIds
      * @param token
      */
@@ -400,8 +501,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         PurchaserEntity purchaserEntity = purchaserService.getOne(new LambdaQueryWrapper<PurchaserEntity>()
                 .eq(PurchaserEntity::getUserId, userId));
 
-//        DistributionEntity distributionEntity = distributionService.getOne(new LambdaQueryWrapper<DistributionEntity>()
-//                .eq(DistributionEntity::getUserId, userId));
         String distributionId = distributionDao.getDistributionIdByUserId(userId);
         long unAccept = 0;
         long unSend = 0;
@@ -562,7 +661,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
                             orderDetailEntity.setClassificationname(classificationEntity.getClassificationname());
                             orderDetailEntity.setPrice(goodsEntity.getPrice());
                             orderDetailEntity.setGoodsunit(goodsEntity.getGoodsunit());
-                            orderDetailEntity.setImgurl(goodsEntity.getImgurl());
+                            orderDetailEntity.setImgurl(goodsEntity.getGoodsimg());
                             orderDetailEntity.setGoodsid(goodsEntity.getGoodsid());
                             orderDetailEntity.setOrderdetailid(UUID.randomUUID().toString());
                         }
@@ -707,7 +806,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         OrderEntity orderEntity = new OrderEntity();
         orderEntity.setOrderid(orderReceiveVo.getOrderid());
         orderEntity.setSignuser(userId);
-        orderEntity.setConfirmsigntime(new Date());
+        orderEntity.setSigntime(new Date());
         orderEntity.setStatus(OrderConstant.RECEIVE.getCode() + "");
         this.updateById(orderEntity);
         List<OrderReceiveVo.OrderDetail> children = orderReceiveVo.getChildren();

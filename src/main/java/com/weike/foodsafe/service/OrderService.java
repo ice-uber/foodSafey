@@ -6,6 +6,7 @@ import com.weike.common.utils.PageUtils;
 import com.weike.foodsafe.entity.OrderEntity;
 import com.weike.foodsafe.vo.GoodsSourceVo;
 import com.weike.foodsafe.vo.OrderGoodsVo;
+import com.weike.foodsafe.vo.OrderVo;
 import com.weike.foodsafe.vo.order.OrderCheckOutVo;
 import com.weike.foodsafe.vo.order.OrderReceiveVo;
 
@@ -44,5 +45,7 @@ public interface OrderService extends IService<OrderEntity> {
     void orderReceive(OrderReceiveVo orderReceiveVo, String token);
 
     void orderFinish(String orderid, String token);
+
+    List<OrderVo> getOrderList(List<OrderEntity> orderEntityList );
 }
 

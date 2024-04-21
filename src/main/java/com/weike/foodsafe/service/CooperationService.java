@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.weike.common.utils.PageUtils;
 import com.weike.foodsafe.entity.CooperationEntity;
 import com.weike.foodsafe.entity.DistributionEntity;
+import com.weike.foodsafe.entity.PurchaserEntity;
 import com.weike.foodsafe.vo.CooperationResVo;
 
 import java.util.List;
@@ -23,5 +24,11 @@ public interface CooperationService extends IService<CooperationEntity> {
     List<DistributionEntity> getDistributionList(String token);
 
     PageUtils getpuschaserList(String token , Map<String , Object> params);
+
+    List<PurchaserEntity> unCooperationPurchaserList(String token);
+
+    void applyCooperation(String token, String id);
+
+
 }
 
